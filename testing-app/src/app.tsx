@@ -6,6 +6,9 @@ import { useAddElement } from "utils/use_add_element";
 import { upload } from "@canva/asset";
 import { addElementAtPoint } from "@canva/design";
 import { AppElementOptions, initAppElement } from "@canva/design";
+import { requestExport } from "@canva/design";
+import { useFeatureSupport } from "utils/use_feature_support";
+import { editContent } from "@canva/design";
 import React from "react";
 
 export const DOCS_URL = "https://www.canva.dev/docs/apps/";
@@ -42,6 +45,8 @@ const appElementClient = initAppElement<AppElementData>({
 
 export const App = () => {
   const addElement = useAddElement();
+
+  const isSupported = useFeatureSupport();
 
   const onClick = () => {
     addElement({
@@ -82,6 +87,72 @@ export const App = () => {
         decorative: false
       },
     });
+  }
+
+  async function handleVideoUpload() {
+    // Upload a video file
+    const result = await upload({
+      type: "video",
+      mimeType: "video/mp4",
+      url: "https://www.canva.dev/example-assets/video-import/video.mp4",
+      thumbnailImageUrl:
+        "https://www.canva.dev/example-assets/video-import/thumbnail-image.jpg",
+      thumbnailVideoUrl:
+        "https://www.canva.dev/example-assets/video-import/thumbnail-video.mp4",
+      aiDisclosure: "none",
+    });
+
+    // Add the video to the design
+    await addElementAtPoint({
+      type: "video",
+      ref: result.ref,
+      altText: {
+        text: "Video description for accessibility",
+        decorative: false
+      },
+    });
+  }
+
+  async function handleEmbedVideo() {
+    await addElementAtPoint({
+      type: "embed",
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    });
+  }
+
+  async function handleExport() {
+    const result = await requestExport({
+      acceptedFileTypes: ["jpg", "png"],
+    });
+    if (isSupported(requestExport)) {
+      console.log(result);
+    }
+  }
+
+  async function handleQuerying() {
+    // Read and edit richtext content on current page
+    await editContent(
+      {
+        contentType: "richtext",
+        target: "current_page",
+      },
+      async (session) => {
+        // Loop through each content item
+        for (const content of session.contents) {
+          // Get the richtext content as plaintext
+          const plaintext = content.readPlaintext();
+
+          // Format the richtext
+          content.formatParagraph(
+            { index: 0, length: plaintext.length },
+            { fontWeight: "bold"}
+          );
+        }
+
+        // Sync the content so that it's reflected in the design
+        await session.sync();
+      }
+    );
   }
 
   const [state, setState] = React.useState<AppElementChangeEvent>({
@@ -167,10 +238,34 @@ export const App = () => {
         </Button>
         <Button variant="secondary" onClick={handleImageUpload} stretch>
           {intl.formatMessage({
-            defaultMessage: "Add image from external UR",
+            defaultMessage: "Add image to design",
             description:
               "Button text to add image from external UR. Opens an external URL when pressed.",
           })}
+        </Button>
+        <Button variant="secondary" onClick={handleVideoUpload} stretch>
+          {intl.formatMessage({
+            defaultMessage: "Add video to design",
+            description:
+              "Button text to add video from external URL. Uploads and adds a video when pressed.",
+          })}
+        </Button>
+        <Button variant="secondary" onClick={handleEmbedVideo} stretch>
+          {intl.formatMessage({
+            defaultMessage: "Add embed video to design",
+            description:
+              "Button text to add embed video from external URL. Uploads and adds an embed video when pressed.",
+          })}
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleExport}
+          disabled={!isSupported(requestExport)}
+          >
+            Export design
+        </Button>
+        <Button variant="primary" onClick={handleQuerying}>
+          Update richtext content
         </Button>
         <div>
           <input
