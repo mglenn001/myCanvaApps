@@ -9,6 +9,7 @@ import { AppElementOptions, initAppElement } from "@canva/design";
 import { requestExport } from "@canva/design";
 import { useFeatureSupport } from "utils/use_feature_support";
 import { editContent } from "@canva/design";
+import { FileInput, FileInputItem } from "@canva/app-ui-kit";
 import React from "react";
 
 export const DOCS_URL = "https://www.canva.dev/docs/apps/";
@@ -297,6 +298,19 @@ export const App = () => {
             })
           }
         </Button>
+        <FileInput
+          multiple
+          onDropAcceptedFiles={() => {}}
+          stretchButton
+        />
+        <FileInputItem
+          label="exampleFile1.txt"
+          onDeleteClick={() => {}}
+        />
+        <FileInputItem
+          label="exampleFile2.txt"
+          onDeleteClick={() => {}}
+        />
       </Rows>
     </div>
   );
